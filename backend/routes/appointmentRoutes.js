@@ -23,7 +23,7 @@ router.get("/patient/:patientId", protect, getAppointmentsByPatient);
 router.get("/doctor", protect, authorize("doctor", "admin"), getAppointmentsByDoctor);
 router.get("/doctor/:id", getAppointmentsByDoctor);
 router.post("/", protect, createAppointment);
-router.post("/confirm-payment", confirmPayment);
+router.post("/confirm-payment",protect, confirmPayment);
 router.post("/:id/cancel", protect, (req, res, next) => {
   req.body = { status: "Canceled" };
   updateAppointment(req, res, next);

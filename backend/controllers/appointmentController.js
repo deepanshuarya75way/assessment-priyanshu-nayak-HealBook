@@ -619,8 +619,34 @@ const confirmPayment = async (req, res) => {
     if (session.payment_status !== "paid" && session.status !== "complete") {
       return res.status(400).json({ success: false, message: "Payment has not been completed" });
     }
+// Patient ownership verification 
+    const authenticatedUserId=String(req.user?.clerkId || 
+      req.auth?.userId ||
+      req.user?.id ||
+      req.user?._id ||
+      ""
+    );
+    if(!authenticatedUserId || session.metadata?.clerkUserId !==autenticatedUserId){
+      return res.status(403).json({
+        success:false,
+        message:"you cannot confirm another patient's payment"
+      });
+    }
+
+    // amount verification
+    const expectedAmount=safeNumber(session.metadata?.fees);
+    if(expectedAmount ===null || expectedAmount <=0 ||
+      session.amount_total !==Math.round(expectedAmount *100)||
+      session.currency!=="Inr"
+    ){
+      return res.status(400).json({
+        success:false,
+        message:"Payment amount mismatch"
+      });
+    }
 
     let appt = await Appointment.findOne({ sessionId: session_id });
+
 
     if (!appt) {
       const meta = session.metadata || {};
